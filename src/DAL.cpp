@@ -11,9 +11,7 @@
 #include <iterator>
 
 using namespace std;
-
-typedef uint64_t pgnum;
-typedef unsigned char BYTE;
+using namespace DAL;
 
 freelist::freelist(pgnum initialPage) {
     maxPage = initialPage;
@@ -27,6 +25,14 @@ pgnum freelist::getNextPage() {
     }
     maxPage += 1;
     return maxPage;
+}
+
+void page::writeData(std::string data) {
+    if (data.size() > size) {
+        cerr << "Attempted to write " << data << "of size " << data.size() << " into block of size " << size << endl;
+        return;
+    }
+    this->data->assign(data.begin(), data.end());
 }
 
 page *dal::allocateEmptyPage() {
@@ -70,7 +76,7 @@ void dal::close() {
     }
 }
 
-dal *open(string path, int pageSize) {
+dal *DAL::openFile(string path, int pageSize) {
     dal *new_dal = new dal{path, pageSize, nullptr, new freelist{0}};
     fstream *new_file = new fstream(path, ios::binary);
 

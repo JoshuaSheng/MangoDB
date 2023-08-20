@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(tests)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -15,5 +15,5 @@ FetchContent_MakeAvailable(googletest)
 
 # Now simply link against gtest or gtest_main as needed. Eg
 add_executable(example test.cpp)
-target_link_libraries(example gtest_main)
+target_link_libraries(example gtest_main gmock_main dblib)
 add_test(NAME example_test COMMAND example)
