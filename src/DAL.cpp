@@ -4,17 +4,42 @@
 
 #include "DAL.h"
 #include <iostream>
-#include <fstream>
 #include <memory>
 #include <cstdint>
 #include <vector>
 #include <iterator>
+#include <filesystem>
 
 using namespace std;
 using namespace DAL;
 
 freelist::freelist(pgnum initialPage) {
     maxPage = initialPage;
+}
+
+void freelist::serialize(vector<BYTE> *data) {
+    int pos = 0;
+    auto released_pages_size = this->releasedPages.size();
+
+    memcpy(data->data() + pos, &this->maxPage, sizeof(pgnum));
+    pos += sizeof(pgnum);
+    memcpy(data->data() + pos, &released_pages_size, sizeof(released_pages_size));
+    pos += sizeof(released_pages_size);
+    memcpy(data->data() + pos, this->releasedPages.data(), sizeof(*this));
+}
+
+void freelist::deserialize(vector<BYTE> *data) {
+    int pos = 0;
+    size_t released_pages_size = 0;
+
+    data->resize(sizeof(this->maxPage) + sizeof(size_t));
+    memcpy(&this->maxPage, data->data() + pos, sizeof(this->maxPage));
+    pos += sizeof(this->maxPage);
+    memcpy(&released_pages_size, data->data() + pos, sizeof(released_pages_size));
+    pos += sizeof(released_pages_size);
+
+    data->resize(data->size() + released_pages_size);
+    memcpy(this->releasedPages.data(), data->data() + pos, released_pages_size);
 }
 
 pgnum freelist::getNextPage() {
@@ -27,12 +52,9 @@ pgnum freelist::getNextPage() {
     return maxPage;
 }
 
-void page::writeData(std::string data) {
-    if (data.size() > size) {
-        cerr << "Attempted to write " << data << "of size " << data.size() << " into block of size " << size << endl;
-        return;
-    }
-    this->data->assign(data.begin(), data.end());
+dal::dal(string path, int pagesize, fstream *file) {
+    meta = newEmptyMeta();
+    freeList = new freelist{0};
 }
 
 page *dal::allocateEmptyPage() {
@@ -62,6 +84,51 @@ void dal::writePage(page *p) {
     }
 }
 
+freelist *dal::readFreeList() {
+    try {
+        page *p = readPage(meta->freelistPage);
+        freelist *freelist;
+        freelist->deserialize(p->data);
+        return freelist;
+    }
+    catch (exception e) {
+        cout << e.what() << endl;
+    }
+}
+
+page *dal::writeFreeList() {
+    page *p = allocateEmptyPage();
+    p->num = meta->freelistPage;
+    freeList->serialize(p->data);
+    writePage(p);
+    return p;
+}
+
+page *dal::writeMeta(Meta *meta) {
+    page *p = allocateEmptyPage();
+    p->num = metaPageNum;
+    meta->serialize(p->data);
+    try {
+        writePage(p);
+    }
+    catch (exception &e) {
+        throw e;
+    }
+    return p;
+}
+
+Meta *dal::readMeta() {
+    try {
+        page *p = readPage(metaPageNum);
+        Meta *meta = newEmptyMeta();
+        meta->unserialize(p->data);
+        return meta;
+    }
+    catch (exception &e) {
+        throw e;
+    }
+}
+
 void dal::close() {
     if (file != nullptr) {
         file->close();
@@ -77,15 +144,37 @@ void dal::close() {
 }
 
 dal *DAL::openFile(string path, int pageSize) {
-    dal *new_dal = new dal{path, pageSize, nullptr, new freelist{0}};
-    fstream *new_file = new fstream(path, ios::binary);
+    try {
+        dal *new_dal = new dal{path, pageSize, nullptr};
 
-    new_dal->file = new_file;
-    new_dal->path = path;
+        if (filesystem::exists(path)) {
+            fstream *new_file = new fstream(path, ios::binary);
 
-    new_dal->file->open(path);
-    if (new_dal->file->fail()) {
-        cerr << "Error: path " << path << " failed to open";
+            new_dal->file = new_file;
+            new_dal->path = path;
+            new_dal->file->open(path);
+            if (new_dal->file->fail()) {
+                cerr << "Error: path " << path << " failed to open";
+            }
+
+            delete new_dal->meta;
+            new_dal->meta = new_dal->readMeta();
+
+            delete new_dal->freeList;
+            new_dal->freeList = new_dal->readFreeList();
+        }
+        else {
+            fstream *new_file = new fstream(path, ios::binary | fstream::app);
+            new_dal->file = new_file;
+            new_dal->path = path;
+            new_dal->meta->freelistPage = new_dal->freeList->getNextPage();
+            new_dal->writeFreeList();
+            new_dal->writeMeta(new_dal->meta);
+        }
+
+        return new_dal;
     }
-    return new_dal;
+    catch (exception &e){
+        cerr << e.what() << endl;
+    }
 }

@@ -11,10 +11,11 @@
 #include <memory>
 #include <cstdint>
 #include <vector>
+#include "const.h"
+#include "meta.h"
+#include "page.h"
 
 namespace DAL {
-    typedef uint64_t pgnum;
-    typedef unsigned char BYTE;
 
     struct freelist {
         pgnum maxPage;
@@ -23,14 +24,9 @@ namespace DAL {
         freelist(pgnum initialPage);
 
         pgnum getNextPage();
-    };
 
-    struct page {
-        pgnum num;
-        int size;
-        std::vector<BYTE> *data;
-
-        void writeData(std::string data);
+        void serialize(vector<BYTE> *data);
+        void deserialize(vector<BYTE> *data);
     };
 
     struct dal {
@@ -38,6 +34,9 @@ namespace DAL {
         int pagesize;
         std::fstream *file;
         freelist *freeList;
+        Meta *meta;
+
+        dal(string path, int pagesize, fstream *file);
 
         page *allocateEmptyPage();
 
@@ -46,6 +45,14 @@ namespace DAL {
         void writePage(page *p);
 
         void close();
+
+        page *writeMeta(Meta *meta);
+
+        Meta *readMeta();
+
+        page *writeFreeList();
+
+        freelist *readFreeList();
     };
 
     dal *openFile(std::string path, int pageSize);
