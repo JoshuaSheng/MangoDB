@@ -2,8 +2,9 @@
 // Created by Josh on 2023-08-20.
 //
 
-#ifndef NOTMYSQL_CONST_H
-#define NOTMYSQL_CONST_H
+#ifndef MANGODB_CONST_H
+#define MANGODB_CONST_H
+#include <cstdint>
 
 
 const int pageNumSize = 8;
@@ -11,4 +12,4 @@ typedef uint64_t pgnum;
 typedef unsigned char BYTE;
 
 
-#endif //NOTMYSQL_CONST_H
+#endif //MANGODB_CONST_H

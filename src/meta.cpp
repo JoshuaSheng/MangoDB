@@ -14,3 +14,7 @@ void Meta::serialize(vector<BYTE> *buffer) {
 void Meta::unserialize(vector<BYTE> *buffer) {
     std::memcpy(&freelistPage, buffer->data(), sizeof(freelistPage));
 }
+Meta *newEmptyMeta() {
+    Meta *m = new Meta{};
+    return m;
+}

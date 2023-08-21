@@ -94,6 +94,7 @@ freelist *dal::readFreeList() {
     catch (exception e) {
         cout << e.what() << endl;
     }
+    return nullptr;
 }
 
 page *dal::writeFreeList() {
@@ -176,5 +177,6 @@ dal *DAL::openFile(string path, int pageSize) {
     }
     catch (exception &e){
         cerr << e.what() << endl;
+        throw e;
     }
 }

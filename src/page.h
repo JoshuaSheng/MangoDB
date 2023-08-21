@@ -2,8 +2,8 @@
 // Created by Josh on 2023-08-20.
 //
 
-#ifndef NOTMYSQL_PAGE_H
-#define NOTMYSQL_PAGE_H
+#ifndef MANGODB_PAGE_H
+#define MANGODB_PAGE_H
 
 #include "const.h"
 #include <string>
@@ -19,4 +19,4 @@ struct page {
 };
 
 
-#endif //NOTMYSQL_PAGE_H
+#endif //MANGODB_PAGE_H

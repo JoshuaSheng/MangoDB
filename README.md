@@ -1,2 +1,2 @@
-# NotMySQL
-A minimalistic NoSQL database built from the ground up in C++
+# MangoDB
+A minimalistic Key-Value store built from the ground up in C++

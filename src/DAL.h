@@ -2,8 +2,8 @@
 // Created by Josh on 2023-08-19.
 //
 
-#ifndef NOTMYSQL_DAL_H
-#define NOTMYSQL_DAL_H
+#ifndef MANGODB_DAL_H
+#define MANGODB_DAL_H
 
 
 #include <iostream>
@@ -59,4 +59,4 @@ namespace DAL {
 }
 
 
-#endif //NOTMYSQL_DAL_H
+#endif //MANGODB_DAL_H

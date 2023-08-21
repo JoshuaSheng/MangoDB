@@ -2,8 +2,8 @@
 // Created by Josh on 2023-08-20.
 //
 
-#ifndef NOTMYSQL_META_H
-#define NOTMYSQL_META_H
+#ifndef MANGODB_META_H
+#define MANGODB_META_H
 
 #include <cstdint>
 #include <vector>
@@ -23,9 +23,6 @@ struct Meta {
     void unserialize(vector<BYTE> *buffer);
 };
 
-Meta *newEmptyMeta() {
-    Meta *m = new Meta{};
-    return m;
-}
+Meta *newEmptyMeta();
 
-#endif //NOTMYSQL_META_H
+#endif //MANGODB_META_H
