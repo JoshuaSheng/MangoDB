@@ -13,7 +13,6 @@ TEST(HelloTest, BasicAssertions) {
 }
 
 TEST(TestDal, TestDal) {
-    DAL::dal new_dal{};
     std::string file = "../../tests/dal_test";
     DAL::dal *dal = DAL::openFile(file, 4);
     auto p = dal->allocateEmptyPage();
@@ -24,7 +23,7 @@ TEST(TestDal, TestDal) {
     EXPECT_THAT(*(p->data), ElementsAre('a', 's', 'd', 'f'));
 
     dal->writePage(p);
-    DAL::page *pg_clone = dal->readPage(p->num);
+    page *pg_clone = dal->readPage(p->num);
 
     EXPECT_THAT(*pg_clone->data, ElementsAre('a', 's', 'd', 'f'));
 
