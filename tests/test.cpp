@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <filesystem>
 #include "../src/DAL.h"
 
 using namespace testing;
@@ -13,16 +14,20 @@ TEST(HelloTest, BasicAssertions) {
 }
 
 TEST(TestDal, TestDal) {
+    cout << std::filesystem::current_path() << endl;
     std::string file = "../../tests/dal_test";
-    DAL::dal *dal = DAL::openFile(file, 4);
+    DAL::dal *dal = DAL::openFile(file, 64);
     auto p = dal->allocateEmptyPage();
     p->num = dal->freeList->getNextPage();
     p->writeData("asdf");
 
-    EXPECT_THAT(p->num, 1);
-    EXPECT_THAT(*(p->data), ElementsAre('a', 's', 'd', 'f'));
+    EXPECT_THAT(p->num, 2);
+    EXPECT_THAT(*p->data, ElementsAre('a', 's', 'd', 'f'));
+
+
 
     dal->writePage(p);
+    dal->writeFreeList();
     page *pg_clone = dal->readPage(p->num);
 
     EXPECT_THAT(*pg_clone->data, ElementsAre('a', 's', 'd', 'f'));

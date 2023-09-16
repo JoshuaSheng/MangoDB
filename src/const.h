@@ -8,6 +8,7 @@
 
 
 const int pageNumSize = 8;
+const int pageSize = 64;
 typedef uint64_t pgnum;
 typedef unsigned char BYTE;
 

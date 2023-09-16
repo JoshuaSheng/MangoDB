@@ -21,24 +21,25 @@ void freelist::serialize(vector<BYTE> *data) {
     int pos = 0;
     auto released_pages_size = this->releasedPages.size();
 
+    data->resize(sizeof(this->maxPage) + sizeof(size_t));
     memcpy(data->data() + pos, &this->maxPage, sizeof(pgnum));
     pos += sizeof(pgnum);
     memcpy(data->data() + pos, &released_pages_size, sizeof(released_pages_size));
     pos += sizeof(released_pages_size);
-    memcpy(data->data() + pos, this->releasedPages.data(), sizeof(*this));
+
+    data->resize(data->size() + released_pages_size);
+    memcpy(data->data() + pos, this->releasedPages.data(), released_pages_size);
 }
 
-void freelist::deserialize(vector<BYTE> *data) {
+void freelist::deserialize(const vector<BYTE> *data) {
     int pos = 0;
     size_t released_pages_size = 0;
+    memcpy(&this->maxPage, data->data(), sizeof(this->maxPage));
 
-    data->resize(sizeof(this->maxPage) + sizeof(size_t));
-    memcpy(&this->maxPage, data->data() + pos, sizeof(this->maxPage));
     pos += sizeof(this->maxPage);
     memcpy(&released_pages_size, data->data() + pos, sizeof(released_pages_size));
     pos += sizeof(released_pages_size);
 
-    data->resize(data->size() + released_pages_size);
     memcpy(this->releasedPages.data(), data->data() + pos, released_pages_size);
 }
 
@@ -62,23 +63,24 @@ page *dal::allocateEmptyPage() {
 };
 
 page *dal::readPage(pgnum pageNum) {
+    file->flush();
+    //don't resize on read, because the back inserter will automatically get the correct size
     page *p = allocateEmptyPage();
     auto offset = int(pageNum) * pagesize;
     file->seekg(int64_t(offset));
     //don't eat new lines in binary mode
     file->unsetf(std::ios::skipws);
 
-    p->data->reserve(p->size);
-    p->data->insert(p->data->begin(),
-                    istreambuf_iterator<char>(*file),
-                    istreambuf_iterator<char>());
+    copy_n(istreambuf_iterator<char>(*file), this->pagesize, back_inserter(*p->data));
     return p;
 }
 
 void dal::writePage(page *p) {
+    p->data->resize(64);
     auto offset = int(p->num) * pagesize;
-    file->seekg(offset);
-    file->write((char *)p->data->data(), p->size);
+    file->seekp(offset);
+    file->write((char *)p->data->data(), p->data->size());
+    file->flush();
     if (file -> fail()) {
         cerr << "Error: path " << path << " failed to write";
     }
@@ -87,9 +89,9 @@ void dal::writePage(page *p) {
 freelist *dal::readFreeList() {
     try {
         page *p = readPage(meta->freelistPage);
-        freelist *freelist;
-        freelist->deserialize(p->data);
-        return freelist;
+        freelist *fl = new freelist{0};
+        fl->deserialize(p->data);
+        return fl;
     }
     catch (exception e) {
         cout << e.what() << endl;
@@ -150,9 +152,9 @@ dal *DAL::openFile(string path, int pageSize) {
 
         if (filesystem::exists(path)) {
             fstream *new_file = new fstream(path, ios::binary);
-
             new_dal->file = new_file;
             new_dal->path = path;
+            new_dal->pagesize = pageSize;
             new_dal->file->open(path);
             if (new_dal->file->fail()) {
                 cerr << "Error: path " << path << " failed to open";
@@ -165,9 +167,10 @@ dal *DAL::openFile(string path, int pageSize) {
             new_dal->freeList = new_dal->readFreeList();
         }
         else {
-            fstream *new_file = new fstream(path, ios::binary | fstream::app);
+            fstream *new_file = new fstream(path, ios::binary | fstream::in | fstream::out | fstream::trunc);
             new_dal->file = new_file;
             new_dal->path = path;
+            new_dal->pagesize = pageSize;
             new_dal->meta->freelistPage = new_dal->freeList->getNextPage();
             new_dal->writeFreeList();
             new_dal->writeMeta(new_dal->meta);

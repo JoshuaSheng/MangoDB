@@ -26,7 +26,7 @@ namespace DAL {
         pgnum getNextPage();
 
         void serialize(vector<BYTE> *data);
-        void deserialize(vector<BYTE> *data);
+        void deserialize(const vector<BYTE> *data);
     };
 
     struct dal {

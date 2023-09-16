@@ -7,7 +7,7 @@
 
 void Meta::serialize(vector<BYTE> *buffer) {
     int freelistPageSize = sizeof(freelistPage);
-    buffer->reserve(freelistPageSize);
+    buffer->resize(freelistPageSize);
     std::memcpy(buffer->data(), &freelistPage, freelistPageSize);
 }
 
