@@ -5,6 +5,7 @@
 #ifndef MANGODB_DAL_H
 #define MANGODB_DAL_H
 
+class Node;
 
 #include <iostream>
 #include <fstream>
@@ -14,6 +15,7 @@
 #include "const.h"
 #include "meta.h"
 #include "page.h"
+#include "node.h"
 
 namespace DAL {
 
@@ -24,6 +26,7 @@ namespace DAL {
         freelist(pgnum initialPage);
 
         pgnum getNextPage();
+        void releasePage(pgnum page);
 
         void serialize(vector<BYTE> *data);
         void deserialize(const vector<BYTE> *data);
@@ -53,6 +56,12 @@ namespace DAL {
         page *writeFreeList();
 
         freelist *readFreeList();
+
+        Node *getNode(pgnum pageNum);
+
+        Node *writeNode(Node *node);
+
+        void deleteNode(pgnum pageNum);
     };
 
     dal *openFile(std::string path, int pageSize);

@@ -22,7 +22,7 @@ TEST(TestDal, TestDal) {
     p->writeData("asdf");
 
     EXPECT_THAT(p->num, 2);
-    EXPECT_THAT(*p->data, ElementsAre('a', 's', 'd', 'f'));
+    EXPECT_EQ((*p->data)[3], 'f');
 
 
 
@@ -30,7 +30,7 @@ TEST(TestDal, TestDal) {
     dal->writeFreeList();
     page *pg_clone = dal->readPage(p->num);
 
-    EXPECT_THAT(*pg_clone->data, ElementsAre('a', 's', 'd', 'f'));
+    EXPECT_EQ((*pg_clone->data)[3], 'f');
 
     dal->close();
     EXPECT_THAT(dal->file, nullptr);

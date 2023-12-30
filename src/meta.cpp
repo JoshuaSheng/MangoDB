@@ -6,13 +6,19 @@
 #include <cstring>
 
 void Meta::serialize(vector<BYTE> *buffer) {
-    int freelistPageSize = sizeof(freelistPage);
-    buffer->resize(freelistPageSize);
-    std::memcpy(buffer->data(), &freelistPage, freelistPageSize);
+    constexpr int freelistPageSize = sizeof(pgnum);
+    buffer->resize(freelistPageSize*2); // storing meta and root pgnums
+    int pos = 0;
+    std::memcpy(buffer->data() + pos, &root, freelistPageSize);
+    pos += freelistPageSize;
+    std::memcpy(buffer->data() + pos, &freelistPage, freelistPageSize);
 }
 
 void Meta::unserialize(vector<BYTE> *buffer) {
-    std::memcpy(&freelistPage, buffer->data(), sizeof(freelistPage));
+    int pos = 0;
+    std::memcpy(&root, buffer->data() + pos, sizeof(freelistPage));
+    pos += sizeof(freelistPage);
+    std::memcpy(&freelistPage, buffer->data() + pos, sizeof(freelistPage));
 }
 Meta *newEmptyMeta() {
     Meta *m = new Meta{};

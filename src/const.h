@@ -7,8 +7,8 @@
 #include <cstdint>
 
 
-const int pageNumSize = 8;
-const int pageSize = 64;
+inline constexpr int pageNumSize = 8;
+inline constexpr int pageSize = 64;
 typedef uint64_t pgnum;
 typedef unsigned char BYTE;
 

@@ -17,6 +17,7 @@ typedef unsigned char BYTE;
 
 
 struct Meta {
+    pgnum root;
     pgnum freelistPage;
 
     void serialize(vector<BYTE> *buffer);

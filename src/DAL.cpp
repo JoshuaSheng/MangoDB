@@ -53,6 +53,10 @@ pgnum freelist::getNextPage() {
     return maxPage;
 }
 
+void freelist::releasePage(pgnum page) {
+    releasedPages.push_back(page);
+}
+
 dal::dal(string path, int pagesize, fstream *file) {
     meta = newEmptyMeta();
     freeList = new freelist{0};
@@ -144,6 +148,34 @@ void dal::close() {
     else {
         cerr << "Error: path " << path << " failed to close";
     }
+}
+
+Node *dal::getNode(pgnum pageNum) {
+    page *p {readPage(pageNum)};
+    Node *node = newEmptyNode();
+    node->deserialize(*p->data);
+    node->pageNum = pageNum;
+    return node;
+}
+
+Node *dal::writeNode(Node *node) {
+    page *p = allocateEmptyPage();
+    if (node->pageNum == 0) {
+        p->num = freeList->getNextPage();
+        node->pageNum = p->num;
+    }
+    else {
+        p->num = node->pageNum;
+    }
+
+    p->data = node->serialize(*p->data);
+    writePage(p);
+
+    return node;
+}
+
+void dal::deleteNode(pgnum pageNum) {
+    freeList->releasePage(pageNum);
 }
 
 dal *DAL::openFile(string path, int pageSize) {

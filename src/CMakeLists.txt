@@ -3,8 +3,8 @@ project(db)
 
 set(CMAKE_CXX_STANDARD 17)
 add_library(dblib STATIC
-        DAL.cpp
+        DAL.cpp node.h DAL.h
         # Add more source files as needed
-        meta.cpp meta.h const.h page.cpp page.h)
+        meta.cpp meta.h const.h page.cpp page.h node.cpp)
 
-target_include_directories(dblib PUBLIC DAL.h)
+target_include_directories(dblib PUBLIC ../src)
