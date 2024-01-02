@@ -9,6 +9,7 @@
 
 inline constexpr int pageNumSize = 8;
 inline constexpr int pageSize = 64;
+inline constexpr int nodeHeaderSize = 3;
 typedef uint64_t pgnum;
 typedef unsigned char BYTE;
 

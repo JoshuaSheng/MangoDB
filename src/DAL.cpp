@@ -57,9 +57,12 @@ void freelist::releasePage(pgnum page) {
     releasedPages.push_back(page);
 }
 
-dal::dal(string path, int pagesize, fstream *file) {
+dal::dal(string path, fstream *file, Options options) {
     meta = newEmptyMeta();
     freeList = new freelist{0};
+    minFillPercent = options.minFillPercent;
+    maxFillPercent = options.maxFillPercent;
+    pagesize = options.pageSize;
 }
 
 page *dal::allocateEmptyPage() {
@@ -155,6 +158,7 @@ Node *dal::getNode(pgnum pageNum) {
     Node *node = newEmptyNode();
     node->deserialize(*p->data);
     node->pageNum = pageNum;
+    node->dal = this;
     return node;
 }
 
@@ -178,15 +182,47 @@ void dal::deleteNode(pgnum pageNum) {
     freeList->releasePage(pageNum);
 }
 
-dal *DAL::openFile(string path, int pageSize) {
+double dal::maxThreshold() {
+    return maxFillPercent*pagesize;
+}
+
+double dal::minThreshold() {
+    return minFillPercent*pagesize;
+}
+
+bool dal::isOverpopulated(Node *node) {
+    return node->nodeSize() > maxThreshold();
+}
+
+bool dal::isUnderpopulated(Node *node) {
+    return node->nodeSize() < minThreshold();
+}
+
+int dal::getSplitIndex(Node *node) {
+    int size{nodeHeaderSize};
+    for (int i{0}; i < node->items.size(); ++i) {
+        size += node->elementSize(i);
+        //need to have at least one node on the right to populate the new right child
+        if (size > minThreshold() && i < node->items.size() - 1) {
+            return i + 1;
+        }
+    }
+    return -1;
+}
+
+Node *dal::newNode(std::vector<Item *> items, std::vector<pgnum> childNodes) {
+    return new Node(items, childNodes, freeList->getNextPage(), this);
+}
+
+dal *DAL::openFile(string path, Options options) {
     try {
-        dal *new_dal = new dal{path, pageSize, nullptr};
+        dal *new_dal = new dal{path, nullptr, options};
 
         if (filesystem::exists(path)) {
             fstream *new_file = new fstream(path, ios::binary);
             new_dal->file = new_file;
             new_dal->path = path;
-            new_dal->pagesize = pageSize;
+            new_dal->pagesize = options.pageSize;
             new_dal->file->open(path);
             if (new_dal->file->fail()) {
                 cerr << "Error: path " << path << " failed to open";
@@ -202,7 +238,7 @@ dal *DAL::openFile(string path, int pageSize) {
             fstream *new_file = new fstream(path, ios::binary | fstream::in | fstream::out | fstream::trunc);
             new_dal->file = new_file;
             new_dal->path = path;
-            new_dal->pagesize = pageSize;
+            new_dal->pagesize = options.pageSize;
             new_dal->meta->freelistPage = new_dal->freeList->getNextPage();
             new_dal->writeFreeList();
             new_dal->writeMeta(new_dal->meta);

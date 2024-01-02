@@ -5,6 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 add_library(dblib STATIC
         DAL.cpp node.h DAL.h
         # Add more source files as needed
-        meta.cpp meta.h const.h page.cpp page.h node.cpp)
+        meta.cpp meta.h const.h page.cpp page.h node.cpp collection.cpp collection.h)
 
 target_include_directories(dblib PUBLIC ../src)

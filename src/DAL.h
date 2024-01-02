@@ -17,6 +17,14 @@ class Node;
 #include "page.h"
 #include "node.h"
 
+struct Options {
+    int pageSize;
+    double_t minFillPercent;
+    double_t maxFillPercent;
+};
+
+constexpr Options defaultOptions {pageSize, 0.5, 0.95};
+
 namespace DAL {
 
     struct freelist {
@@ -35,11 +43,13 @@ namespace DAL {
     struct dal {
         std::string path;
         int pagesize;
+        double_t minFillPercent;
+        double_t maxFillPercent;
         std::fstream *file;
         freelist *freeList;
         Meta *meta;
 
-        dal(string path, int pagesize, fstream *file);
+        dal(string path, fstream *file, Options options=defaultOptions);
 
         page *allocateEmptyPage();
 
@@ -61,10 +71,22 @@ namespace DAL {
 
         Node *writeNode(Node *node);
 
+        Node * newNode(std::vector<Item *> items, std::vector<pgnum> childNodes);
+
         void deleteNode(pgnum pageNum);
+
+        double maxThreshold();
+
+        double minThreshold();
+
+        bool isOverpopulated(Node *node);
+
+        bool isUnderpopulated(Node *node);
+
+        int getSplitIndex(Node *node);
     };
 
-    dal *openFile(std::string path, int pageSize);
+    dal *openFile(std::string path, Options options);
 }
 
 

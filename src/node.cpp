@@ -3,6 +3,7 @@
 //
 
 #include <cstring>
+#include <cstdarg>
 #include "node.h"
 
 bool Node::isLeaf() {
@@ -110,7 +111,7 @@ Node *Node::writeNode(Node *node) {
     return dal->writeNode(node);
 }
 
-void Node::writeNodes(std::vector<Node *> nodes) {
+void Node::writeNodes(std::initializer_list<Node*> nodes) {
     for (auto node: nodes) {
         writeNode(node);
     }
@@ -146,23 +147,98 @@ std::pair<bool, int> Node::findKeyInNode(std::vector<BYTE> key) {
     return std::make_pair(false, items.size());
 }
 
-std::pair<Node *, int> findKeyHelper(Node *node, std::vector<BYTE> &key) {
+std::pair<Node *, int> findKeyHelper(Node *node, std::vector<BYTE> &key, bool exact, vector<int> &ancestorsIndex) {
     auto [wasFound, index] {node->findKeyInNode(key)};
     if (wasFound) {
         return std::make_pair(node, index);
     }
 
     if (node->isLeaf()) {
-        return std::make_pair(nullptr, -1);
+        if (exact) return std::make_pair(nullptr, -1);
+        return std::make_pair(node, index);
     }
-
+    ancestorsIndex.push_back(index);
     Node * nextChild = node->getNode(node->childNodes[index]);
-    return findKeyHelper(nextChild, key);
+    return findKeyHelper(nextChild, key, exact, ancestorsIndex);
 }
 
-std::pair<Node *, int> Node::findKey(std::vector<BYTE> key) {
-    return findKeyHelper(this, key);
+std::tuple<Node *, int, vector<int>> Node::findKey(std::vector<BYTE> key, bool exact) {
+    vector<int> ancestorsIndex {};
+    return std::tuple_cat(findKeyHelper(this, key, exact, ancestorsIndex), std::make_tuple(ancestorsIndex));
 }
+
+int Node::elementSize(int index) {
+    int size{0};
+    size += items[index]->key.size();
+    size += items[index]->value.size();
+    size += pageNumSize;
+    return size;
+}
+
+int Node::nodeSize() {
+    int size{0};
+    size += nodeHeaderSize;
+    for (int i{0}; i < items.size(); i++) {
+        size += elementSize(i);
+    }
+    size += pageNumSize;
+    return size;
+}
+
+void Node::addItem(Item *item, int index) {
+    if (index > items.size()) {
+        throw std::out_of_range("Index " + std::string{static_cast<char>(index)} + "is out of range of items array of size " + std::string{static_cast<char>(items.size())});
+    }
+    else if (index == items.size()) {
+        items.push_back(item);
+    }
+    else {
+        items.insert(items.begin() + index, item);
+    }
+}
+
+bool Node::isOverpopulated() {
+    return dal->isOverpopulated(this);
+}
+
+bool Node::isUnderpopulated() {
+    return dal->isUnderpopulated(this);
+}
+
+void *Node::split(Node *nodeToSplit, int nodeToSplitIndex) {
+    int splitIndex{dal->getSplitIndex(nodeToSplit)};
+    Item *middleItem{nodeToSplit->items[splitIndex]};
+    Node *newNode;
+
+    if (nodeToSplit->isLeaf()) {
+        std::vector<Item *> newItems{nodeToSplit->items.begin() + splitIndex + 1, nodeToSplit->items.end()};
+        std::vector<pgnum> newChildNodes{};
+        newNode = writeNode(dal->newNode(newItems, newChildNodes));
+        nodeToSplit->items.resize(splitIndex);
+    }
+    else {
+        std::vector<Item *> newItems{nodeToSplit->items.begin() + splitIndex + 1, nodeToSplit->items.end()};
+        std::vector<pgnum> newChildNodes{nodeToSplit->childNodes.begin() + splitIndex + 1, nodeToSplit->childNodes.end()};
+        newNode = writeNode(dal->newNode(newItems, newChildNodes));
+        nodeToSplit->items.resize(splitIndex);
+        nodeToSplit->childNodes.resize(splitIndex + 1);
+    }
+    addItem(middleItem, nodeToSplitIndex);
+    if (childNodes.size() == nodeToSplitIndex + 1) {
+        childNodes.push_back(newNode->pageNum);
+    }
+    else {
+        childNodes.insert(childNodes.begin() + nodeToSplitIndex + 1, newNode->pageNum);
+    }
+    writeNodes({this, nodeToSplit});
+}
+
+Node::Node(std::vector<Item *> items, std::vector<pgnum> childNodes, pgnum pageNum, DAL::dal *dal): items(items), childNodes(childNodes), pageNum(pageNum), dal(dal) {};
+
+Node::Node() = default;
+
+
+
 
 
 
