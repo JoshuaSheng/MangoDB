@@ -19,11 +19,13 @@ class Node;
 
 struct Options {
     int pageSize;
-    double_t minFillPercent;
-    double_t maxFillPercent;
+    double minFillPercent;
+    double maxFillPercent;
 };
 
 constexpr Options defaultOptions {pageSize, 0.5, 0.95};
+
+struct Item;
 
 namespace DAL {
 
@@ -43,8 +45,8 @@ namespace DAL {
     struct dal {
         std::string path;
         int pagesize;
-        double_t minFillPercent;
-        double_t maxFillPercent;
+        double minFillPercent;
+        double maxFillPercent;
         std::fstream *file;
         freelist *freeList;
         Meta *meta;
@@ -86,7 +88,7 @@ namespace DAL {
         int getSplitIndex(Node *node);
     };
 
-    dal *openFile(std::string path, Options options);
+    dal *openFile(std::string path, Options options=defaultOptions);
 }
 
 

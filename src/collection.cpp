@@ -8,7 +8,7 @@ Collection::Collection(std::vector<BYTE> name, pgnum root, DAL::dal* dal): name(
 
 Item *Collection::find(vector<BYTE> key) {
     Node *node = dal->getNode(root);
-    auto [containingNode, index] = node->findKey(key);
+    auto [containingNode, index, _] = node->findKey(key);
     if (index == -1) {
         return nullptr;
     }
@@ -21,6 +21,7 @@ void Collection::put(vector<BYTE> key, vector<BYTE> value) {
     if (root == 0) {
         rootNode = dal->writeNode(dal->newNode(vector<Item *>{item}, vector<pgnum>{}));
         root = rootNode->pageNum;
+        return;
     }
     else {
         rootNode = dal->getNode(root);

@@ -19,10 +19,11 @@ Item * newItem(std::vector<BYTE> key, std::vector<BYTE> value) {
 }
 
 std::vector<BYTE> *Node::serialize(std::vector<BYTE> &buf) {
+    buf.resize(pageSize);
     int leftPos{0};
-    size_t rightPos{buf.size() - 1};
+    size_t rightPos{buf.size()};
     uint8_t bitSetVar = this->isLeaf() ? 1 : 0;
-    buf[0] = bitSetVar;
+    memcpy(buf.data() + leftPos, &bitSetVar, sizeof(uint8_t));
     leftPos += sizeof(bitSetVar);
     uint16_t itemLength{uint16_t(this->items.size())};
     memcpy(buf.data() + leftPos, &itemLength, sizeof(uint16_t));
@@ -43,11 +44,11 @@ std::vector<BYTE> *Node::serialize(std::vector<BYTE> &buf) {
         leftPos += sizeof(offset);
 
         rightPos -= vlen;
-        memcpy(buf.data() + rightPos, &item->value, vlen);
+        memcpy(buf.data() + rightPos, item->value.data(), vlen);
         rightPos -= sizeof(vlen);
         memcpy(buf.data() + rightPos, &vlen, sizeof(vlen));
         rightPos -= klen;
-        memcpy(buf.data() + rightPos, &item->key, klen);
+        memcpy(buf.data() + rightPos, item->key.data(), klen);
         rightPos -= sizeof(klen);
         memcpy(buf.data() + rightPos, &klen, sizeof(klen));
 
@@ -68,7 +69,7 @@ void Node::deserialize(std::vector<BYTE> &buf) {
     uint16_t itemsCount{};
     leftPos += sizeof(uint8_t);
     memcpy(&itemsCount, buf.data() + leftPos, sizeof(itemsCount));
-    leftPos += sizeof(uint8_t) + sizeof(uint16_t);
+    leftPos += sizeof(uint16_t);
 
     for (int i{0}; i < itemsCount; ++i) {
         if (!isLeaf) {
@@ -87,14 +88,14 @@ void Node::deserialize(std::vector<BYTE> &buf) {
         memcpy(&klen, buf.data() + offset, sizeof(int8_t));
         offset += sizeof(int8_t);
 
-        std::vector<BYTE> key{buf.data() + offset, buf.data() + offset + klen - 1};
+        std::vector<BYTE> key{buf.data() + offset, buf.data() + offset + klen};
         offset += klen;
 
         int8_t vlen {};
         memcpy(&vlen, buf.data() + offset, sizeof(int8_t));
         offset += sizeof(int8_t);
 
-        std::vector<BYTE> value{buf.data() + offset, buf.data() + offset + vlen - 1};
+        std::vector<BYTE> value{buf.data() + offset, buf.data() + offset + vlen};
         offset += vlen;
 
         items.push_back(new Item{key, value});
@@ -205,7 +206,7 @@ bool Node::isUnderpopulated() {
     return dal->isUnderpopulated(this);
 }
 
-void *Node::split(Node *nodeToSplit, int nodeToSplitIndex) {
+void Node::split(Node *nodeToSplit, int nodeToSplitIndex) {
     int splitIndex{dal->getSplitIndex(nodeToSplit)};
     Item *middleItem{nodeToSplit->items[splitIndex]};
     Node *newNode;

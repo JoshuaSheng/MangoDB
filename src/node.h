@@ -40,7 +40,7 @@ public:
         bool isOverpopulated();
         bool isUnderpopulated();
 
-        void *split(Node *nodeToSplit, int nodeToSplitIndex);
+        void split(Node *nodeToSplit, int nodeToSplitIndex);
 
     bool isLeaf();
 

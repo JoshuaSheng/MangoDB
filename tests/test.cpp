@@ -16,7 +16,7 @@ TEST(HelloTest, BasicAssertions) {
 TEST(TestDal, TestDal) {
     cout << std::filesystem::current_path() << endl;
     std::string file = "../../tests/dal_test";
-    DAL::dal *dal = DAL::openFile(file, 64);
+    DAL::dal *dal = DAL::openFile(file);
     auto p = dal->allocateEmptyPage();
     p->num = dal->freeList->getNextPage();
     p->writeData("asdf");
@@ -35,4 +35,10 @@ TEST(TestDal, TestDal) {
     dal->close();
     EXPECT_THAT(dal->file, nullptr);
 
+}
+
+TEST(TestDal, TestDalNodes) {
+    cout << std::filesystem::current_path() << endl;
+    std::string file = "../../tests/nodes_test";
+    DAL::dal *dal = DAL::openFile(file);
 }

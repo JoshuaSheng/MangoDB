@@ -171,7 +171,6 @@ Node *dal::writeNode(Node *node) {
     else {
         p->num = node->pageNum;
     }
-
     p->data = node->serialize(*p->data);
     writePage(p);
 

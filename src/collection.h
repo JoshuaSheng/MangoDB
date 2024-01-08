@@ -10,12 +10,13 @@
 #include "DAL.h"
 
 class Collection {
-    Collection(vector<BYTE> name, pgnum root, DAL::dal *dal);
 
     std::vector<BYTE> name;
     pgnum root;
     DAL::dal *dal;
 
+public:
+    Collection(vector<BYTE> name, pgnum root, DAL::dal *dal);
     vector<Node *>getNodes(vector<int> indexes);
 
     Item *find(vector<BYTE> key);
