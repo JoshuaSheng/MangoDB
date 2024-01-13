@@ -238,7 +238,121 @@ Node::Node(std::vector<Item *> items, std::vector<pgnum> childNodes, pgnum pageN
 
 Node::Node() = default;
 
+void Node::removeItemFromLeaf(int index){
+   items.erase(items.begin() + index);
+}
 
+vector<int> Node::removeItemFromBranch(int index) {
+    std::vector<int> affectedNodes{index};
+    //target the left branch of the item
+    Node *affectedNode = getNode(childNodes[index]);
+    //we want the largest element from the left branch of the item, e.g. the largest element smaller than the current one
+    while (!affectedNode->isLeaf()) {
+        affectedNodes.push_back(childNodes.size() - 1);
+        affectedNode = affectedNode->getNode(affectedNode->childNodes.back());
+    }
+    items[index] = affectedNode->items.back();
+    affectedNode->items.pop_back();
+    writeNodes({this, affectedNode});
+
+    return affectedNodes;
+}
+
+void Node::rotateRight(Node *leftChild, Node *rightChild, Node *parent, int rightChildIndex) {
+    if (leftChild->items.empty()) {
+        throw logic_error("Tried to rebalance with empty left child");
+    }
+    Item *leftChildLastItem = leftChild->items.back();
+    leftChild->items.pop_back();
+
+    //Get the item that will be replaced in the parent
+    int parentItemIndex = rightChildIndex - 1;
+    if (rightChildIndex == 0) {
+        parentItemIndex = 0;
+    }
+    Item *parentItem = parent->items[parentItemIndex];
+
+    //move the left item to the parent and the parent item to the right node
+    parent->items[parentItemIndex] = leftChildLastItem;
+    rightChild->items.insert(rightChild->items.begin(), parentItem);
+    //move child nodes as well if they exist
+    if (!leftChild->isLeaf()) {
+        pgnum childNodeToShift = leftChild->childNodes.back();
+        leftChild->childNodes.pop_back();
+        rightChild->childNodes.insert(rightChild->childNodes.begin(), childNodeToShift);
+    }
+}
+
+void Node::rotateLeft(Node *leftChild, Node *rightChild, Node *parent, int rightChildIndex) {
+    if (rightChild->items.empty()) {
+        throw logic_error("Tried to rebalance with empty right child");
+    }
+    Item *rightChildFirstItem = rightChild->items.front();
+    rightChild->items.erase(rightChild->items.begin());
+
+    //Get the item that will be replaced in the parent
+    int parentItemIndex = rightChildIndex;
+    if (parentItemIndex >= parent->items.size()) {
+        parentItemIndex = parent->items.size() - 1;
+    }
+    Item *parentItem = parent->items[parentItemIndex];
+
+    //move the left item to the parent and the parent item to the right node
+    parent->items[parentItemIndex] = rightChildFirstItem;
+    leftChild->items.push_back(parentItem);
+    //move child nodes as well if they exist
+    if (!rightChild->isLeaf()) {
+        pgnum childNodeToShift = rightChild->childNodes.front();
+        rightChild->childNodes.erase(rightChild->childNodes.begin());
+        leftChild->childNodes.push_back(childNodeToShift);
+    }
+}
+//merges a child node with its left sibling, removing the node
+void Node::merge(Node *node, int index) {
+    Node *leftSibling = getNode(index - 1);
+    Item *parentNodeItem = items[index-1];
+    items.erase(items.begin() + index - 1);
+    leftSibling->items.push_back(parentNodeItem);
+    leftSibling->items.insert(leftSibling->items.end(), node->items.begin(), node->items.end());
+    if (!node->isLeaf()) {
+        leftSibling->childNodes.insert(leftSibling->childNodes.end(), node->childNodes.begin(), node->childNodes.end());
+    }
+    writeNodes({leftSibling, this});
+    dal->deleteNode(node->pageNum);
+}
+
+inline bool Node::canSpareAnElement() {
+    return dal->getSplitIndex(this) != -1;
+}
+
+void Node::rebalanceRemove(Node *unbalancedNode, int unbalancedNodeIndex) {
+    //rotate left capacity into unbalanced node
+    if (unbalancedNodeIndex != 0) {
+        Node *leftNode = getNode(childNodes[unbalancedNodeIndex - 1]);
+        if (leftNode->canSpareAnElement()) {
+            rotateRight(leftNode, this, unbalancedNode, unbalancedNodeIndex);
+            writeNodes({leftNode, this, unbalancedNode});
+            return;
+        }
+    }
+    //rotate right capacity into unbalanced node
+    if (unbalancedNodeIndex != childNodes.size()) {
+        Node *rightNode = getNode(childNodes[unbalancedNodeIndex + 1]);
+        if (rightNode->canSpareAnElement()) {
+            rotateLeft(unbalancedNode, this, rightNode, unbalancedNodeIndex);
+            writeNodes({unbalancedNode, this, rightNode});
+            return;
+        }
+    }
+    //merge right with unbalanced node
+    if (unbalancedNodeIndex == 0) {
+        Node *rightNode = getNode(childNodes[unbalancedNodeIndex+1]);
+        return merge(rightNode, unbalancedNodeIndex + 1);
+    }
+
+    //merge with left
+    return merge(unbalancedNode, unbalancedNodeIndex);
+}
 
 
 

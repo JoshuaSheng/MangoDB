@@ -65,3 +65,33 @@ vector<Node *> Collection::getNodes(vector<int> indexes) {
     }
     return nodes;
 }
+
+void Collection::remove(std::vector<BYTE> key) {
+    Node *rootNode = dal->getNode(root);
+    auto [nodeToRemoveFrom, removeItemIndex, ancestorsIndexes] = rootNode->findKey(key);
+    if (removeItemIndex == -1) {
+        cout << "Couldn't find key to remove" << endl;
+        return;
+    }
+
+    if (nodeToRemoveFrom->isLeaf()) {
+        nodeToRemoveFrom->removeItemFromLeaf(removeItemIndex);
+    }
+    else {
+        std::vector<int>affectedNodes = nodeToRemoveFrom->removeItemFromBranch(removeItemIndex);
+        ancestorsIndexes.insert(ancestorsIndexes.end(), affectedNodes.begin(), affectedNodes.end());
+    }
+    std::vector<Node *>ancestors = getNodes(ancestorsIndexes);
+    for (int i{static_cast<int>(ancestors.size() - 2)}; i >= 0; ++i) {
+        Node *parent = ancestors[i];
+        Node *node = ancestors[i+1];
+        if (node->isUnderpopulated()) {
+            parent->rebalanceRemove(node, ancestorsIndexes[i+1]);
+        }
+    }
+
+    rootNode = ancestors[0];
+    if (rootNode->items.empty() && !rootNode->childNodes.empty()) {
+        root = ancestors[1]->pageNum;
+    }
+}

@@ -47,6 +47,20 @@ public:
     std::vector<pgnum> childNodes;
     std::vector<Item *> items;
     DAL::dal *dal;
+
+    void removeItemFromLeaf(int index);
+
+    vector<int> removeItemFromBranch(int index);
+
+    void merge(Node *node, int index);
+
+    bool canSpareAnElement();
+
+    void rebalanceRemove(Node *unbalancedNode, int unbalancedNodeIndex);
+
+    void rotateRight(Node *leftChild, Node *rightChild, Node *parent, int rightChildIndex);
+
+    void rotateLeft(Node *leftChild, Node *rightChild, Node *parent, int rightChildIndex);
 };
 
 Node * newEmptyNode();

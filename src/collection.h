@@ -21,6 +21,8 @@ public:
 
     Item *find(vector<BYTE> key);
     void put(vector<BYTE> key, vector<BYTE> value);
+
+    void remove(vector<BYTE> key);
 };
 
 
