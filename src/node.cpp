@@ -164,7 +164,7 @@ std::pair<Node *, int> findKeyHelper(Node *node, std::vector<BYTE> &key, bool ex
 }
 
 std::tuple<Node *, int, vector<int>> Node::findKey(std::vector<BYTE> key, bool exact) {
-    vector<int> ancestorsIndex {};
+    vector<int> ancestorsIndex {0};
     return std::tuple_cat(findKeyHelper(this, key, exact, ancestorsIndex), std::make_tuple(ancestorsIndex));
 }
 
@@ -240,6 +240,7 @@ Node::Node() = default;
 
 void Node::removeItemFromLeaf(int index){
    items.erase(items.begin() + index);
+   writeNode(this);
 }
 
 vector<int> Node::removeItemFromBranch(int index) {
@@ -330,8 +331,8 @@ void Node::rebalanceRemove(Node *unbalancedNode, int unbalancedNodeIndex) {
     if (unbalancedNodeIndex != 0) {
         Node *leftNode = getNode(childNodes[unbalancedNodeIndex - 1]);
         if (leftNode->canSpareAnElement()) {
-            rotateRight(leftNode, this, unbalancedNode, unbalancedNodeIndex);
-            writeNodes({leftNode, this, unbalancedNode});
+            rotateRight(leftNode, unbalancedNode, this, unbalancedNodeIndex);
+            writeNodes({leftNode, unbalancedNode, this});
             return;
         }
     }
@@ -339,8 +340,8 @@ void Node::rebalanceRemove(Node *unbalancedNode, int unbalancedNodeIndex) {
     if (unbalancedNodeIndex != childNodes.size()) {
         Node *rightNode = getNode(childNodes[unbalancedNodeIndex + 1]);
         if (rightNode->canSpareAnElement()) {
-            rotateLeft(unbalancedNode, this, rightNode, unbalancedNodeIndex);
-            writeNodes({unbalancedNode, this, rightNode});
+            rotateLeft(unbalancedNode, rightNode, this, unbalancedNodeIndex);
+            writeNodes({unbalancedNode, rightNode, this});
             return;
         }
     }

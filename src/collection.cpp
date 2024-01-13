@@ -29,7 +29,7 @@ void Collection::put(vector<BYTE> key, vector<BYTE> value) {
 
     auto [targetNode, insertionIndex, ancestorsIndexes] = rootNode->findKey(key, false);
 
-    if (targetNode->items.size() > insertionIndex && cmp_bytes(targetNode->items[insertionIndex]->key, key)) {
+    if (targetNode->items.size() > insertionIndex && cmp_bytes(targetNode->items[insertionIndex]->key, key) == 0) {
         targetNode->items[insertionIndex]->value = value;
     } else {
         targetNode->addItem(item, insertionIndex);
@@ -59,8 +59,8 @@ vector<Node *> Collection::getNodes(vector<int> indexes) {
     Node *rootNode = dal->getNode(root);
     vector<Node *>nodes {rootNode};
     Node *currNode{rootNode};
-    for (int index: indexes) {
-        currNode = dal->getNode(currNode->childNodes[index]);
+    for (int i{1}; i < indexes.size(); i++) {
+        currNode = dal->getNode(currNode->childNodes[indexes[i]]);
         nodes.push_back(currNode);
     }
     return nodes;
@@ -82,7 +82,7 @@ void Collection::remove(std::vector<BYTE> key) {
         ancestorsIndexes.insert(ancestorsIndexes.end(), affectedNodes.begin(), affectedNodes.end());
     }
     std::vector<Node *>ancestors = getNodes(ancestorsIndexes);
-    for (int i{static_cast<int>(ancestors.size() - 2)}; i >= 0; ++i) {
+    for (int i{static_cast<int>(ancestors.size() - 2)}; i >= 0; --i) {
         Node *parent = ancestors[i];
         Node *node = ancestors[i+1];
         if (node->isUnderpopulated()) {

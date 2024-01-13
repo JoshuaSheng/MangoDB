@@ -25,6 +25,17 @@ int main() {
     Item *i = c.find(toVector("key4"));
     std::cout << "key is " << std::string{i->key.begin(), i->key.end()} << std::endl;
     std::cout << "value is " << std::string{i->value.begin(), i->value.end()} << std::endl;
+
+    c.remove(toVector("key3"));
+    i = c.find(toVector("key3"));
+    if (i != nullptr) {
+        cout << "Something went wrong" << endl;
+    }
+    c.put(toVector("key4"), toVector("value4"));
+
+    i = c.find(toVector("key4"));
+    std::cout << "key is " << std::string{i->key.begin(), i->key.end()} << std::endl;
+    std::cout << "value is " << std::string{i->value.begin(), i->value.end()} << std::endl;
 //    while (true) {
 //        char in;
 //        std::cout << "Enter your choice" << std::endl;
