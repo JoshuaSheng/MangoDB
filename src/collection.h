@@ -8,15 +8,15 @@
 
 #include "const.h"
 #include "DAL.h"
+#include "Tx.h"
 
 class Collection {
 
     std::vector<BYTE> name;
     pgnum root;
-    DAL::dal *dal;
-
 public:
-    Collection(vector<BYTE> name, pgnum root, DAL::dal *dal);
+    Tx *tx;
+    Collection(vector<BYTE> name, pgnum root, Tx *tx);
     vector<Node *>getNodes(vector<int> indexes);
 
     Item *find(vector<BYTE> key);

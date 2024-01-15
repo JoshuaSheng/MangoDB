@@ -5,9 +5,12 @@
 #ifndef MAIN_CPP_NODE_H
 #define MAIN_CPP_NODE_H
 
+class Tx;
+
 #include <vector>
 #include "const.h"
 #include "DAL.h"
+#include "Tx.h"
 
 namespace DAL {
     struct dal;
@@ -22,7 +25,7 @@ class Node {
 
 public:
         pgnum pageNum;
-        Node(std::vector<Item *> items, std::vector<pgnum> childNodes, pgnum pageNum, DAL::dal *dal);
+        Node(std::vector<Item *> items, std::vector<pgnum> childNodes, pgnum pageNum, Tx *tx);
         Node();
         vector<BYTE> * serialize(std::vector<BYTE> &buf);
         void deserialize(std::vector<BYTE> &buf);
@@ -46,7 +49,7 @@ public:
 
     std::vector<pgnum> childNodes;
     std::vector<Item *> items;
-    DAL::dal *dal;
+    Tx *tx;
 
     void removeItemFromLeaf(int index);
 

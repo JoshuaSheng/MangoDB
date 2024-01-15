@@ -12,18 +12,11 @@ class Node;
 #include <memory>
 #include <cstdint>
 #include <vector>
+
 #include "const.h"
 #include "meta.h"
 #include "page.h"
 #include "node.h"
-
-struct Options {
-    int pageSize;
-    double minFillPercent;
-    double maxFillPercent;
-};
-
-constexpr Options defaultOptions {pageSize, 0.5, 0.95};
 
 struct Item;
 
@@ -73,8 +66,6 @@ namespace DAL {
 
         Node *writeNode(Node *node);
 
-        Node * newNode(std::vector<Item *> items, std::vector<pgnum> childNodes);
-
         void deleteNode(pgnum pageNum);
 
         double maxThreshold();
@@ -88,7 +79,7 @@ namespace DAL {
         int getSplitIndex(Node *node);
     };
 
-    dal *openFile(std::string path, Options options=defaultOptions);
+    dal *openFile(std::string path, const Options &options=defaultOptions);
 }
 
 

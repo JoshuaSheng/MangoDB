@@ -109,7 +109,7 @@ void Node::deserialize(std::vector<BYTE> &buf) {
 }
 
 Node *Node::writeNode(Node *node) {
-    return dal->writeNode(node);
+    return tx->writeNode(node);
 }
 
 void Node::writeNodes(std::initializer_list<Node*> nodes) {
@@ -119,7 +119,7 @@ void Node::writeNodes(std::initializer_list<Node*> nodes) {
 }
 
 Node *Node::getNode(pgnum pageNum) {
-    return dal->getNode(pageNum);
+    return tx->getNode(pageNum);
 }
 
 //returns -1 if l < r, 0 if l == r, and 1 otherwise
@@ -199,28 +199,28 @@ void Node::addItem(Item *item, int index) {
 }
 
 bool Node::isOverpopulated() {
-    return dal->isOverpopulated(this);
+    return tx->db->dal->isOverpopulated(this);
 }
 
 bool Node::isUnderpopulated() {
-    return dal->isUnderpopulated(this);
+    return tx->db->dal->isUnderpopulated(this);
 }
 
 void Node::split(Node *nodeToSplit, int nodeToSplitIndex) {
-    int splitIndex{dal->getSplitIndex(nodeToSplit)};
+    int splitIndex{tx->db->dal->getSplitIndex(nodeToSplit)};
     Item *middleItem{nodeToSplit->items[splitIndex]};
     Node *newNode;
 
     if (nodeToSplit->isLeaf()) {
         std::vector<Item *> newItems{nodeToSplit->items.begin() + splitIndex + 1, nodeToSplit->items.end()};
         std::vector<pgnum> newChildNodes{};
-        newNode = writeNode(dal->newNode(newItems, newChildNodes));
+        newNode = writeNode(tx->newNode(newItems, newChildNodes));
         nodeToSplit->items.resize(splitIndex);
     }
     else {
         std::vector<Item *> newItems{nodeToSplit->items.begin() + splitIndex + 1, nodeToSplit->items.end()};
         std::vector<pgnum> newChildNodes{nodeToSplit->childNodes.begin() + splitIndex + 1, nodeToSplit->childNodes.end()};
-        newNode = writeNode(dal->newNode(newItems, newChildNodes));
+        newNode = writeNode(tx->newNode(newItems, newChildNodes));
         nodeToSplit->items.resize(splitIndex);
         nodeToSplit->childNodes.resize(splitIndex + 1);
     }
@@ -234,7 +234,7 @@ void Node::split(Node *nodeToSplit, int nodeToSplitIndex) {
     writeNodes({this, nodeToSplit});
 }
 
-Node::Node(std::vector<Item *> items, std::vector<pgnum> childNodes, pgnum pageNum, DAL::dal *dal): items(items), childNodes(childNodes), pageNum(pageNum), dal(dal) {};
+Node::Node(std::vector<Item *> items, std::vector<pgnum> childNodes, pgnum pageNum, Tx *tx): items(items), childNodes(childNodes), pageNum(pageNum), tx(tx) {};
 
 Node::Node() = default;
 
@@ -319,11 +319,11 @@ void Node::merge(Node *node, int index) {
         leftSibling->childNodes.insert(leftSibling->childNodes.end(), node->childNodes.begin(), node->childNodes.end());
     }
     writeNodes({leftSibling, this});
-    dal->deleteNode(node->pageNum);
+    tx->deleteNode(node->pageNum);
 }
 
 inline bool Node::canSpareAnElement() {
-    return dal->getSplitIndex(this) != -1;
+    return tx->db->dal->getSplitIndex(this) != -1;
 }
 
 void Node::rebalanceRemove(Node *unbalancedNode, int unbalancedNodeIndex) {

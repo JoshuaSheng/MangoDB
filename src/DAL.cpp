@@ -158,7 +158,6 @@ Node *dal::getNode(pgnum pageNum) {
     Node *node = newEmptyNode();
     node->deserialize(*p->data);
     node->pageNum = pageNum;
-    node->dal = this;
     return node;
 }
 
@@ -209,11 +208,7 @@ int dal::getSplitIndex(Node *node) {
     return -1;
 }
 
-Node *dal::newNode(std::vector<Item *> items, std::vector<pgnum> childNodes) {
-    return new Node(items, childNodes, freeList->getNextPage(), this);
-}
-
-dal *DAL::openFile(string path, Options options) {
+dal *DAL::openFile(string path, const Options &options) {
     try {
         dal *new_dal = new dal{path, nullptr, options};
 

@@ -4,10 +4,13 @@
 
 #include "collection.h"
 
-Collection::Collection(std::vector<BYTE> name, pgnum root, DAL::dal* dal): name(name), root(root), dal(dal) {}
+std::runtime_error writeInsideReadTxErr {"Tried to write inside of a read transaction"};
+
+Collection::Collection(std::vector<BYTE> name, pgnum root, Tx *tx): name(name), root(root), tx(tx) {
+}
 
 Item *Collection::find(vector<BYTE> key) {
-    Node *node = dal->getNode(root);
+    Node *node = tx->getNode(root);
     auto [containingNode, index, _] = node->findKey(key);
     if (index == -1) {
         return nullptr;
@@ -16,15 +19,19 @@ Item *Collection::find(vector<BYTE> key) {
 }
 
 void Collection::put(vector<BYTE> key, vector<BYTE> value) {
+    if (!tx->write) {
+        throw writeInsideReadTxErr;
+    }
+
     Item *item = newItem(key, value);
     Node* rootNode;
     if (root == 0) {
-        rootNode = dal->writeNode(dal->newNode(vector<Item *>{item}, vector<pgnum>{}));
+        rootNode = tx->writeNode(tx->newNode(vector<Item *>{item}, vector<pgnum>{}));
         root = rootNode->pageNum;
         return;
     }
     else {
-        rootNode = dal->getNode(root);
+        rootNode = tx->getNode(root);
     }
 
     auto [targetNode, insertionIndex, ancestorsIndexes] = rootNode->findKey(key, false);
@@ -34,7 +41,7 @@ void Collection::put(vector<BYTE> key, vector<BYTE> value) {
     } else {
         targetNode->addItem(item, insertionIndex);
     }
-    dal->writeNode(targetNode);
+    tx->writeNode(targetNode);
     auto ancestors = getNodes(ancestorsIndexes);
 
     //rebalances nodes from the bottom up, except for root
@@ -47,27 +54,31 @@ void Collection::put(vector<BYTE> key, vector<BYTE> value) {
     //is rootNode being assigned to itself here?
     rootNode = ancestors[0];
     if (rootNode->isOverpopulated()) {
-        Node *newRoot = dal->newNode(vector<Item *>{}, vector<pgnum> {rootNode->pageNum});
+        Node *newRoot = tx->newNode(vector<Item *>{}, vector<pgnum> {rootNode->pageNum});
         newRoot->split(rootNode, 0);
 
-        newRoot = dal->writeNode(newRoot);
+        newRoot = tx->writeNode(newRoot);
         root = newRoot->pageNum;
     }
 }
 
 vector<Node *> Collection::getNodes(vector<int> indexes) {
-    Node *rootNode = dal->getNode(root);
+    Node *rootNode = tx->getNode(root);
     vector<Node *>nodes {rootNode};
     Node *currNode{rootNode};
     for (int i{1}; i < indexes.size(); i++) {
-        currNode = dal->getNode(currNode->childNodes[indexes[i]]);
+        currNode = tx->getNode(currNode->childNodes[indexes[i]]);
         nodes.push_back(currNode);
     }
     return nodes;
 }
 
 void Collection::remove(std::vector<BYTE> key) {
-    Node *rootNode = dal->getNode(root);
+    if (!tx->write) {
+        throw writeInsideReadTxErr;
+    }
+
+    Node *rootNode = tx->getNode(root);
     auto [nodeToRemoveFrom, removeItemIndex, ancestorsIndexes] = rootNode->findKey(key);
     if (removeItemIndex == -1) {
         cout << "Couldn't find key to remove" << endl;
