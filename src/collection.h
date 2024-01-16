@@ -24,10 +24,14 @@ public:
     Item *find(vector<BYTE> key);
     void put(vector<BYTE> key, vector<BYTE> value);
 
+    void put(std::string key, std::string value);
+
     void remove(vector<BYTE> key);
 
     Item *serialize();
     void deserialize(Item *item);
+
+    uint64_t getId();
 };
 
 Collection *newEmptyCollection();

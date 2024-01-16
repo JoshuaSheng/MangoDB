@@ -99,11 +99,15 @@ Collection *Tx::addToRootCollection(Collection *newCollection) {
     return newCollection;
 }
 
+Collection *Tx::createCollection(std::string name) {
+    return createCollection(toVector(name));
+}
+
 Collection *Tx::createCollection(std::vector<BYTE> name) {
     if (!write) {
         throw writeInsideReadTxErr;
     }
-    Node * newCollectionPage = db->dal->writeNode(newEmptyNode());
+    Node * newCollectionPage = db->dal->writeNode(newNode({}, {}));
     Collection *newCollection = newEmptyCollection();
 
     newCollection->name = name;

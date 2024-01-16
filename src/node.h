@@ -24,7 +24,7 @@ struct Item {
 class Node {
 
 public:
-        pgnum pageNum;
+        pgnum pageNum = 0;
         Node(std::vector<Item *> items, std::vector<pgnum> childNodes, pgnum pageNum, Tx *tx);
         Node();
         vector<BYTE> * serialize(std::vector<BYTE> &buf);

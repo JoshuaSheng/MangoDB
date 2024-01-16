@@ -25,9 +25,7 @@ public:
     explicit DB(DAL::dal *dal);
     ~DB();
     void close();
-
     Tx *readTx();
-
     Tx *writeTx();
 
     std::shared_mutex rwlock;

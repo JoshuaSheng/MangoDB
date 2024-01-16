@@ -10,6 +10,7 @@ bool Node::isLeaf() {
     return childNodes.empty();
 }
 
+//return an unassigned node
 Node * newEmptyNode() {
     return new Node{};
 }

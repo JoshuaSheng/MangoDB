@@ -7,6 +7,15 @@
 Collection::Collection(std::vector<BYTE> name, pgnum root, Tx *tx): name(name), root(root), tx(tx) {
 }
 
+uint64_t Collection::getId() {
+    if (!tx->write) {
+        return 0;
+    }
+    uint64_t id = counter;
+    counter += 1;
+    return id;
+}
+
 Item *Collection::find(vector<BYTE> key) {
     Node *node = tx->getNode(root);
     auto [containingNode, index, _] = node->findKey(key);
@@ -125,9 +134,20 @@ void Collection::deserialize(Item *item) {
         leftPos += sizeof(pgnum);
         memcpy(&counter, item->value.data() + leftPos, sizeof(pgnum));
     }
+    else {
+        throw std::invalid_argument{"collection is missing data"};
+    }
 }
 
-Collection::Collection() = default;
+void Collection::put(std::string key, std::string value) {
+    return put(toVector(std::move(key)), toVector(std::move(value)));
+}
+
+Collection::Collection() {
+    root = 0;
+    counter = 0;
+    tx = nullptr;
+};
 
 Collection *newEmptyCollection() {
     return new Collection();

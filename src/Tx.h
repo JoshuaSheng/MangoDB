@@ -46,6 +46,8 @@ public:
     Collection *createCollection(std::vector<BYTE> name);
 
     void deleteCollection(std::vector<BYTE> name);
+
+    Collection *createCollection(string name);
 };
 
 
