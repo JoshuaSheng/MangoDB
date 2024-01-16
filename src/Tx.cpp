@@ -70,3 +70,52 @@ Node *Tx::writeNode(Node *node) {
 void Tx::deleteNode(pgnum pageNum) {
     pagesToDelete.push_back(pageNum);
 }
+
+Collection *Tx::getRootCollection() {
+    Collection *rootCollection = newEmptyCollection();
+    rootCollection->tx = this;
+    rootCollection->root = db->dal->meta->root;
+    return rootCollection;
+}
+
+Collection *Tx::getCollection(std::vector<BYTE> name) {
+    Collection *root = getRootCollection();
+    Item *item = root->find(name);
+    if (item == nullptr) {
+        return nullptr;
+    }
+
+    Collection *collection = newEmptyCollection();
+    collection->deserialize(item);
+    collection->tx = this;
+    return collection;
+}
+
+Collection *Tx::addToRootCollection(Collection *newCollection) {
+    newCollection->tx = this;
+    Item *collectionBytes = newCollection->serialize();
+    Collection *rootCollection = getRootCollection();
+    rootCollection->put(newCollection->name, collectionBytes->value);
+    return newCollection;
+}
+
+Collection *Tx::createCollection(std::vector<BYTE> name) {
+    if (!write) {
+        throw writeInsideReadTxErr;
+    }
+    Node * newCollectionPage = db->dal->writeNode(newEmptyNode());
+    Collection *newCollection = newEmptyCollection();
+
+    newCollection->name = name;
+    newCollection->root = newCollectionPage->pageNum;
+    return addToRootCollection(newCollection);
+}
+
+void Tx::deleteCollection(std::vector<BYTE> name) {
+    if (!write) {
+        throw writeInsideReadTxErr;
+    }
+
+    Collection *rootCollection = getRootCollection();
+    rootCollection->remove(name);
+}

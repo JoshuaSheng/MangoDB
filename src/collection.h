@@ -11,19 +11,25 @@
 #include "Tx.h"
 
 class Collection {
-
-    std::vector<BYTE> name;
-    pgnum root;
 public:
     Tx *tx;
+    std::vector<BYTE> name;
+    uint64_t counter;
+    pgnum root;
+
     Collection(vector<BYTE> name, pgnum root, Tx *tx);
+    Collection();
     vector<Node *>getNodes(vector<int> indexes);
 
     Item *find(vector<BYTE> key);
     void put(vector<BYTE> key, vector<BYTE> value);
 
     void remove(vector<BYTE> key);
+
+    Item *serialize();
+    void deserialize(Item *item);
 };
 
+Collection *newEmptyCollection();
 
 #endif //MAIN_CPP_COLLECTION_H

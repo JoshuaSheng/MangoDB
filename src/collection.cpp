@@ -4,8 +4,6 @@
 
 #include "collection.h"
 
-std::runtime_error writeInsideReadTxErr {"Tried to write inside of a read transaction"};
-
 Collection::Collection(std::vector<BYTE> name, pgnum root, Tx *tx): name(name), root(root), tx(tx) {
 }
 
@@ -105,4 +103,32 @@ void Collection::remove(std::vector<BYTE> key) {
     if (rootNode->items.empty() && !rootNode->childNodes.empty()) {
         root = ancestors[1]->pageNum;
     }
+}
+
+Item *Collection::serialize() {
+    std::vector<BYTE> data(sizeof(pgnum)*2);
+    int leftPos = 0;
+    memcpy(data.data(), &root, sizeof(pgnum));
+    leftPos += sizeof(pgnum);
+    memcpy(data.data() + leftPos, &counter, sizeof(pgnum));
+    return newItem(name, data);
+}
+
+void Collection::deserialize(Item *item) {
+    name = item->key;
+
+    if (!item->value.empty()) {
+        int leftPos = 0;
+        pgnum root;
+        pgnum counter;
+        memcpy(&root, item->value.data(), sizeof(pgnum));
+        leftPos += sizeof(pgnum);
+        memcpy(&counter, item->value.data() + leftPos, sizeof(pgnum));
+    }
+}
+
+Collection::Collection() = default;
+
+Collection *newEmptyCollection() {
+    return new Collection();
 }

@@ -23,5 +23,9 @@ struct Options {
 
 constexpr Options defaultOptions {pageSize, 0.5, 0.95};
 
+constexpr uint32_t dbFileHeader = 0xDEADBEEF;
+
+inline const std::runtime_error writeInsideReadTxErr {"Tried to write inside of a read transaction"};
+
 
 #endif //MANGODB_CONST_H
