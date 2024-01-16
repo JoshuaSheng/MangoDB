@@ -10,14 +10,13 @@
 #include <iterator>
 #include <filesystem>
 
-using namespace std;
 using namespace DAL;
 
 freelist::freelist(pgnum initialPage) {
     maxPage = initialPage;
 }
 
-void freelist::serialize(vector<BYTE> *data) {
+void freelist::serialize(std::vector<BYTE> *data) {
     int pos = 0;
     auto released_pages_size = this->releasedPages.size();
 
@@ -31,7 +30,7 @@ void freelist::serialize(vector<BYTE> *data) {
     memcpy(data->data() + pos, this->releasedPages.data(), released_pages_size);
 }
 
-void freelist::deserialize(const vector<BYTE> *data) {
+void freelist::deserialize(const std::vector<BYTE> *data) {
     int pos = 0;
     size_t released_pages_size = 0;
     memcpy(&this->maxPage, data->data(), sizeof(this->maxPage));
@@ -57,7 +56,7 @@ void freelist::releasePage(pgnum page) {
     releasedPages.push_back(page);
 }
 
-dal::dal(string path, fstream *file, Options options) {
+dal::dal(std::string path, std::fstream *file, Options options) {
     meta = newEmptyMeta();
     freeList = new freelist{0};
     minFillPercent = options.minFillPercent;
@@ -66,7 +65,7 @@ dal::dal(string path, fstream *file, Options options) {
 }
 
 page *dal::allocateEmptyPage() {
-    return new page {0, this->pagesize, new vector<BYTE>{}};
+    return new page {0, this->pagesize, new std::vector<BYTE>{}};
 };
 
 page *dal::readPage(pgnum pageNum) {
@@ -78,7 +77,7 @@ page *dal::readPage(pgnum pageNum) {
     //don't eat new lines in binary mode
     file->unsetf(std::ios::skipws);
 
-    copy_n(istreambuf_iterator<char>(*file), this->pagesize, back_inserter(*p->data));
+    copy_n(std::istreambuf_iterator<char>(*file), this->pagesize, back_inserter(*p->data));
     return p;
 }
 
@@ -89,7 +88,7 @@ void dal::writePage(page *p) {
     file->write((char *)p->data->data(), p->data->size());
     file->flush();
     if (file -> fail()) {
-        cerr << "Error: path " << path << " failed to write";
+        std::cerr << "Error: path " << path << " failed to write";
     }
 }
 
@@ -100,8 +99,8 @@ freelist *dal::readFreeList() {
         fl->deserialize(p->data);
         return fl;
     }
-    catch (exception e) {
-        cout << e.what() << endl;
+    catch (std::exception e) {
+        std::cout << e.what() << std::endl;
     }
     return nullptr;
 }
@@ -121,7 +120,7 @@ page *dal::writeMeta(Meta *meta) {
     try {
         writePage(p);
     }
-    catch (exception &e) {
+    catch (std::exception &e) {
         throw e;
     }
     return p;
@@ -134,7 +133,7 @@ Meta *dal::readMeta() {
         meta->unserialize(p->data);
         return meta;
     }
-    catch (exception &e) {
+    catch (std::exception &e) {
         throw e;
     }
 }
@@ -143,13 +142,13 @@ void dal::close() {
     if (file != nullptr) {
         file->close();
         if (file->fail()) {
-            cerr << "Error: path " << path << " failed to close";
+            std::cerr << "Error: path " << path << " failed to close";
         }
         delete file;
         file = nullptr;
     }
     else {
-        cerr << "Error: path " << path << " failed to close";
+        std::cerr << "Error: path " << path << " failed to close";
     }
 }
 
@@ -208,18 +207,18 @@ int dal::getSplitIndex(Node *node) {
     return -1;
 }
 
-dal *DAL::openFile(string path, const Options &options) {
+dal *DAL::openFile(std::string path, const Options &options) {
     try {
         dal *new_dal = new dal{path, nullptr, options};
 
-        if (filesystem::exists(path)) {
-            fstream *new_file = new fstream(path, ios::binary);
+        if (std::filesystem::exists(path)) {
+            std::fstream *new_file = new std::fstream(path, std::ios::binary);
             new_dal->file = new_file;
             new_dal->path = path;
             new_dal->pagesize = options.pageSize;
             new_dal->file->open(path);
             if (new_dal->file->fail()) {
-                cerr << "Error: path " << path << " failed to open";
+                std::cerr << "Error: path " << path << " failed to open";
             }
 
             delete new_dal->meta;
@@ -229,7 +228,7 @@ dal *DAL::openFile(string path, const Options &options) {
             new_dal->freeList = new_dal->readFreeList();
         }
         else {
-            fstream *new_file = new fstream(path, ios::binary | fstream::in | fstream::out | fstream::trunc);
+            std::fstream *new_file = new std::fstream(path, std::ios::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
             new_dal->file = new_file;
             new_dal->path = path;
             new_dal->pagesize = options.pageSize;
@@ -240,8 +239,8 @@ dal *DAL::openFile(string path, const Options &options) {
 
         return new_dal;
     }
-    catch (exception &e){
-        cerr << e.what() << endl;
+    catch (std::exception &e){
+        std::cerr << e.what() << std::endl;
         throw e;
     }
 }

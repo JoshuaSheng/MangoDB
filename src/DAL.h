@@ -31,8 +31,8 @@ namespace DAL {
         pgnum getNextPage();
         void releasePage(pgnum page);
 
-        void serialize(vector<BYTE> *data);
-        void deserialize(const vector<BYTE> *data);
+        void serialize(std::vector<BYTE> *data);
+        void deserialize(const std::vector<BYTE> *data);
     };
 
     struct dal {
@@ -44,7 +44,7 @@ namespace DAL {
         freelist *freeList;
         Meta *meta;
 
-        dal(string path, fstream *file, Options options=defaultOptions);
+        dal(std::string path, std::fstream *file, Options options=defaultOptions);
 
         page *allocateEmptyPage();
 

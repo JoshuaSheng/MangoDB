@@ -16,7 +16,7 @@ uint64_t Collection::getId() {
     return id;
 }
 
-Item *Collection::find(vector<BYTE> key) {
+Item *Collection::find(std::vector<BYTE> key) {
     Node *node = tx->getNode(root);
     auto [containingNode, index, _] = node->findKey(key);
     if (index == -1) {
@@ -25,7 +25,7 @@ Item *Collection::find(vector<BYTE> key) {
     return containingNode->items[index];
 }
 
-void Collection::put(vector<BYTE> key, vector<BYTE> value) {
+void Collection::put(std::vector<BYTE> key, std::vector<BYTE> value) {
     if (!tx->write) {
         throw writeInsideReadTxErr;
     }
@@ -33,7 +33,7 @@ void Collection::put(vector<BYTE> key, vector<BYTE> value) {
     Item *item = newItem(key, value);
     Node* rootNode;
     if (root == 0) {
-        rootNode = tx->writeNode(tx->newNode(vector<Item *>{item}, vector<pgnum>{}));
+        rootNode = tx->writeNode(tx->newNode(std::vector<Item *>{item}, std::vector<pgnum>{}));
         root = rootNode->pageNum;
         return;
     }
@@ -61,7 +61,7 @@ void Collection::put(vector<BYTE> key, vector<BYTE> value) {
     //is rootNode being assigned to itself here?
     rootNode = ancestors[0];
     if (rootNode->isOverpopulated()) {
-        Node *newRoot = tx->newNode(vector<Item *>{}, vector<pgnum> {rootNode->pageNum});
+        Node *newRoot = tx->newNode(std::vector<Item *>{}, std::vector<pgnum> {rootNode->pageNum});
         newRoot->split(rootNode, 0);
 
         newRoot = tx->writeNode(newRoot);
@@ -69,9 +69,9 @@ void Collection::put(vector<BYTE> key, vector<BYTE> value) {
     }
 }
 
-vector<Node *> Collection::getNodes(vector<int> indexes) {
+std::vector<Node *> Collection::getNodes(std::vector<int> indexes) {
     Node *rootNode = tx->getNode(root);
-    vector<Node *>nodes {rootNode};
+    std::vector<Node *>nodes {rootNode};
     Node *currNode{rootNode};
     for (int i{1}; i < indexes.size(); i++) {
         currNode = tx->getNode(currNode->childNodes[indexes[i]]);
@@ -88,7 +88,7 @@ void Collection::remove(std::vector<BYTE> key) {
     Node *rootNode = tx->getNode(root);
     auto [nodeToRemoveFrom, removeItemIndex, ancestorsIndexes] = rootNode->findKey(key);
     if (removeItemIndex == -1) {
-        cout << "Couldn't find key to remove" << endl;
+        std::cout << "Couldn't find key to remove" << std::endl;
         return;
     }
 

@@ -27,14 +27,14 @@ public:
         pgnum pageNum = 0;
         Node(std::vector<Item *> items, std::vector<pgnum> childNodes, pgnum pageNum, Tx *tx);
         Node();
-        vector<BYTE> * serialize(std::vector<BYTE> &buf);
+        std::vector<BYTE> * serialize(std::vector<BYTE> &buf);
         void deserialize(std::vector<BYTE> &buf);
 
         Node *writeNode(Node *node);
         void writeNodes(std::initializer_list<Node *> nodes);
         Node * getNode(pgnum pageNum);
-        pair<bool, int> findKeyInNode(std::vector<BYTE> key);
-        tuple<Node *, int, vector<int>> findKey(std::vector<BYTE> key, bool exact=true);
+        std::pair<bool, int> findKeyInNode(std::vector<BYTE> key);
+        std::tuple<Node *, int, std::vector<int>> findKey(std::vector<BYTE> key, bool exact=true);
 
         int elementSize(int index);
         int nodeSize();
@@ -53,7 +53,7 @@ public:
 
     void removeItemFromLeaf(int index);
 
-    vector<int> removeItemFromBranch(int index);
+    std::vector<int> removeItemFromBranch(int index);
 
     void merge(Node *node, int index);
 

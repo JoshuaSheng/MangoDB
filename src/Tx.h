@@ -10,6 +10,7 @@ class Node;
 class Item;
 class Collection;
 
+#include <vector>
 #include <unordered_map>
 #include "const.h"
 #include "node.h"
@@ -37,7 +38,7 @@ public:
 
     DB *db;
 
-    Node *newNode(vector<Item *> items, vector<pgnum> childNodes);
+    Node *newNode(std::vector<Item *> items, std::vector<pgnum> childNodes);
 
     Collection *getRootCollection();
 
@@ -47,7 +48,7 @@ public:
 
     void deleteCollection(std::vector<BYTE> name);
 
-    Collection *createCollection(string name);
+    Collection *createCollection(std::string name);
 };
 
 

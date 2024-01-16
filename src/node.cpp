@@ -149,7 +149,7 @@ std::pair<bool, int> Node::findKeyInNode(std::vector<BYTE> key) {
     return std::make_pair(false, items.size());
 }
 
-std::pair<Node *, int> findKeyHelper(Node *node, std::vector<BYTE> &key, bool exact, vector<int> &ancestorsIndex) {
+std::pair<Node *, int> findKeyHelper(Node *node, std::vector<BYTE> &key, bool exact, std::vector<int> &ancestorsIndex) {
     auto [wasFound, index] {node->findKeyInNode(key)};
     if (wasFound) {
         return std::make_pair(node, index);
@@ -164,8 +164,8 @@ std::pair<Node *, int> findKeyHelper(Node *node, std::vector<BYTE> &key, bool ex
     return findKeyHelper(nextChild, key, exact, ancestorsIndex);
 }
 
-std::tuple<Node *, int, vector<int>> Node::findKey(std::vector<BYTE> key, bool exact) {
-    vector<int> ancestorsIndex {0};
+std::tuple<Node *, int, std::vector<int>> Node::findKey(std::vector<BYTE> key, bool exact) {
+    std::vector<int> ancestorsIndex {0};
     return std::tuple_cat(findKeyHelper(this, key, exact, ancestorsIndex), std::make_tuple(ancestorsIndex));
 }
 
@@ -244,7 +244,7 @@ void Node::removeItemFromLeaf(int index){
    writeNode(this);
 }
 
-vector<int> Node::removeItemFromBranch(int index) {
+std::vector<int> Node::removeItemFromBranch(int index) {
     std::vector<int> affectedNodes{index};
     //target the left branch of the item
     Node *affectedNode = getNode(childNodes[index]);
@@ -262,7 +262,7 @@ vector<int> Node::removeItemFromBranch(int index) {
 
 void Node::rotateRight(Node *leftChild, Node *rightChild, Node *parent, int rightChildIndex) {
     if (leftChild->items.empty()) {
-        throw logic_error("Tried to rebalance with empty left child");
+        throw std::logic_error("Tried to rebalance with empty left child");
     }
     Item *leftChildLastItem = leftChild->items.back();
     leftChild->items.pop_back();
@@ -287,7 +287,7 @@ void Node::rotateRight(Node *leftChild, Node *rightChild, Node *parent, int righ
 
 void Node::rotateLeft(Node *leftChild, Node *rightChild, Node *parent, int rightChildIndex) {
     if (rightChild->items.empty()) {
-        throw logic_error("Tried to rebalance with empty right child");
+        throw std::logic_error("Tried to rebalance with empty right child");
     }
     Item *rightChildFirstItem = rightChild->items.front();
     rightChild->items.erase(rightChild->items.begin());
