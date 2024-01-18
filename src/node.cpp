@@ -3,7 +3,6 @@
 //
 
 #include <cstring>
-#include <cstdarg>
 #include "node.h"
 
 bool Node::isLeaf() {
@@ -15,7 +14,7 @@ Node * newEmptyNode() {
     return new Node{};
 }
 
-Item * newItem(std::vector<BYTE> key, std::vector<BYTE> value) {
+Item * newItem(std::vector<BYTE> &key, std::vector<BYTE> &value) {
     return new Item{key, value};
 }
 
@@ -136,7 +135,7 @@ int cmp_bytes(std::vector<unsigned char> &l, std::vector<unsigned char> &r) {
     }
 }
 
-std::pair<bool, int> Node::findKeyInNode(std::vector<BYTE> key) {
+std::pair<bool, int> Node::findKeyInNode(std::vector<BYTE> &key) {
     for (int i{0}; i < items.size(); ++i) {
         int res = cmp_bytes(items[i]->key, key);
         if (res == 0) {
@@ -164,7 +163,7 @@ std::pair<Node *, int> findKeyHelper(Node *node, std::vector<BYTE> &key, bool ex
     return findKeyHelper(nextChild, key, exact, ancestorsIndex);
 }
 
-std::tuple<Node *, int, std::vector<int>> Node::findKey(std::vector<BYTE> key, bool exact) {
+std::tuple<Node *, int, std::vector<int>> Node::findKey(std::vector<BYTE> &key, bool exact) {
     std::vector<int> ancestorsIndex {0};
     return std::tuple_cat(findKeyHelper(this, key, exact, ancestorsIndex), std::make_tuple(ancestorsIndex));
 }
@@ -235,7 +234,7 @@ void Node::split(Node *nodeToSplit, int nodeToSplitIndex) {
     writeNodes({this, nodeToSplit});
 }
 
-Node::Node(std::vector<Item *> items, std::vector<pgnum> childNodes, pgnum pageNum, Tx *tx): items(items), childNodes(childNodes), pageNum(pageNum), tx(tx) {};
+Node::Node(std::vector<Item *> &items, std::vector<pgnum> &childNodes, pgnum pageNum, Tx *tx): items(items), childNodes(childNodes), pageNum(pageNum), tx(tx) {};
 
 Node::Node() = default;
 

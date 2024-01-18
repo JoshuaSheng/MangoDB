@@ -38,17 +38,21 @@ public:
 
     DB *db;
 
-    Node *newNode(std::vector<Item *> items, std::vector<pgnum> childNodes);
+    Node *newNode(std::vector<Item *> &items, std::vector<pgnum> &childNodes);
 
     Collection *getRootCollection();
 
-    Collection *getCollection(std::vector<BYTE> name);
+    Collection *getCollection(std::vector<BYTE> &name);
 
-    Collection *createCollection(std::vector<BYTE> name);
+    Collection *createCollection(std::vector<BYTE> &name);
 
-    void deleteCollection(std::vector<BYTE> name);
+    void deleteCollection(std::vector<BYTE> &name);
 
     Collection *createCollection(std::string name);
+
+    Node *newNode();
+
+    Node *newNode(std::vector<Item *> &&items, std::vector<pgnum> &&childNodes);
 };
 
 

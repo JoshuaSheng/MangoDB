@@ -31,8 +31,8 @@ namespace DAL {
         pgnum getNextPage();
         void releasePage(pgnum page);
 
-        void serialize(std::vector<BYTE> *data);
-        void deserialize(const std::vector<BYTE> *data);
+        void serialize(std::vector<BYTE> &data);
+        void deserialize(const std::vector<BYTE> &data);
     };
 
     struct dal {

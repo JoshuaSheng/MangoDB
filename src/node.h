@@ -25,7 +25,7 @@ class Node {
 
 public:
         pgnum pageNum = 0;
-        Node(std::vector<Item *> items, std::vector<pgnum> childNodes, pgnum pageNum, Tx *tx);
+        Node(std::vector<Item *> &items, std::vector<pgnum> &childNodes, pgnum pageNum, Tx *tx);
         Node();
         std::vector<BYTE> * serialize(std::vector<BYTE> &buf);
         void deserialize(std::vector<BYTE> &buf);
@@ -33,8 +33,8 @@ public:
         Node *writeNode(Node *node);
         void writeNodes(std::initializer_list<Node *> nodes);
         Node * getNode(pgnum pageNum);
-        std::pair<bool, int> findKeyInNode(std::vector<BYTE> key);
-        std::tuple<Node *, int, std::vector<int>> findKey(std::vector<BYTE> key, bool exact=true);
+        std::pair<bool, int> findKeyInNode(std::vector<BYTE> &key);
+        std::tuple<Node *, int, std::vector<int>> findKey(std::vector<BYTE> &key, bool exact=true);
 
         int elementSize(int index);
         int nodeSize();
@@ -68,7 +68,7 @@ public:
 
 Node * newEmptyNode();
 
-Item * newItem(std::vector<BYTE> key, std::vector<BYTE> value);
+Item * newItem(std::vector<BYTE> &key, std::vector<BYTE> &value);
 
 int cmp_bytes(std::vector<unsigned char> &l, std::vector<unsigned char> &r);
 #endif //MAIN_CPP_NODE_H

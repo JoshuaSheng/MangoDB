@@ -13,6 +13,9 @@ int main() {
     std::string key = "key1", value = "value1";
     c->put(key, value);
     tx->commit();
+    Item *foundItem = c->find(key);
+    std::cout << "key is " << std::string{foundItem->key.begin(), foundItem->key.end()} << std::endl;
+    std::cout << "value is " << std::string{foundItem->value.begin(), foundItem->value.end()} << std::endl;
 
 //command-line driver code, WIP
 

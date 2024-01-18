@@ -16,30 +16,30 @@ freelist::freelist(pgnum initialPage) {
     maxPage = initialPage;
 }
 
-void freelist::serialize(std::vector<BYTE> *data) {
+void freelist::serialize(std::vector<BYTE> &data) {
     int pos = 0;
     auto released_pages_size = this->releasedPages.size();
 
-    data->resize(sizeof(this->maxPage) + sizeof(size_t));
-    memcpy(data->data() + pos, &this->maxPage, sizeof(pgnum));
+    data.resize(sizeof(this->maxPage) + sizeof(size_t));
+    memcpy(data.data() + pos, &this->maxPage, sizeof(pgnum));
     pos += sizeof(pgnum);
-    memcpy(data->data() + pos, &released_pages_size, sizeof(released_pages_size));
+    memcpy(data.data() + pos, &released_pages_size, sizeof(released_pages_size));
     pos += sizeof(released_pages_size);
 
-    data->resize(data->size() + released_pages_size);
-    memcpy(data->data() + pos, this->releasedPages.data(), released_pages_size);
+    data.resize(data.size() + released_pages_size);
+    memcpy(data.data() + pos, this->releasedPages.data(), released_pages_size);
 }
 
-void freelist::deserialize(const std::vector<BYTE> *data) {
+void freelist::deserialize(const std::vector<BYTE> &data) {
     int pos = 0;
     size_t released_pages_size = 0;
-    memcpy(&this->maxPage, data->data(), sizeof(this->maxPage));
+    memcpy(&this->maxPage, data.data(), sizeof(this->maxPage));
 
     pos += sizeof(this->maxPage);
-    memcpy(&released_pages_size, data->data() + pos, sizeof(released_pages_size));
+    memcpy(&released_pages_size, data.data() + pos, sizeof(released_pages_size));
     pos += sizeof(released_pages_size);
 
-    memcpy(this->releasedPages.data(), data->data() + pos, released_pages_size);
+    memcpy(this->releasedPages.data(), data.data() + pos, released_pages_size);
 }
 
 pgnum freelist::getNextPage() {
@@ -96,7 +96,7 @@ freelist *dal::readFreeList() {
     try {
         page *p = readPage(meta->freelistPage);
         freelist *fl = new freelist{0};
-        fl->deserialize(p->data);
+        fl->deserialize(*p->data);
         return fl;
     }
     catch (std::exception e) {
@@ -108,7 +108,7 @@ freelist *dal::readFreeList() {
 page *dal::writeFreeList() {
     page *p = allocateEmptyPage();
     p->num = meta->freelistPage;
-    freeList->serialize(p->data);
+    freeList->serialize(*p->data);
     writePage(p);
     return p;
 }
@@ -116,7 +116,7 @@ page *dal::writeFreeList() {
 page *dal::writeMeta(Meta *meta) {
     page *p = allocateEmptyPage();
     p->num = metaPageNum;
-    meta->serialize(p->data);
+    meta->serialize(*p->data);
     try {
         writePage(p);
     }
@@ -130,7 +130,7 @@ Meta *dal::readMeta() {
     try {
         page *p = readPage(metaPageNum);
         Meta *meta = newEmptyMeta();
-        meta->unserialize(p->data);
+        meta->unserialize(*p->data);
         return meta;
     }
     catch (std::exception &e) {

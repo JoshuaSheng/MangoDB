@@ -4,7 +4,7 @@
 
 #include "collection.h"
 
-Collection::Collection(std::vector<BYTE> name, pgnum root, Tx *tx): name(name), root(root), tx(tx) {
+Collection::Collection(std::vector<BYTE> &name, pgnum root, Tx *tx): name(name), root(root), tx(tx) {
 }
 
 uint64_t Collection::getId() {
@@ -16,7 +16,11 @@ uint64_t Collection::getId() {
     return id;
 }
 
-Item *Collection::find(std::vector<BYTE> key) {
+Item *Collection::find(std::string key) {
+    return find(toVector(key));
+}
+
+Item *Collection::find(std::vector<BYTE> &key) {
     Node *node = tx->getNode(root);
     auto [containingNode, index, _] = node->findKey(key);
     if (index == -1) {
@@ -25,7 +29,11 @@ Item *Collection::find(std::vector<BYTE> key) {
     return containingNode->items[index];
 }
 
-void Collection::put(std::vector<BYTE> key, std::vector<BYTE> value) {
+Item *Collection::find(std::vector<BYTE> &&key) {
+    return find(key);
+}
+
+void Collection::put(std::vector<BYTE> &key, std::vector<BYTE> &value) {
     if (!tx->write) {
         throw writeInsideReadTxErr;
     }
@@ -33,7 +41,7 @@ void Collection::put(std::vector<BYTE> key, std::vector<BYTE> value) {
     Item *item = newItem(key, value);
     Node* rootNode;
     if (root == 0) {
-        rootNode = tx->writeNode(tx->newNode(std::vector<Item *>{item}, std::vector<pgnum>{}));
+        rootNode = tx->writeNode(tx->newNode(std::vector<Item *>{item}, {}));
         root = rootNode->pageNum;
         return;
     }
@@ -69,7 +77,7 @@ void Collection::put(std::vector<BYTE> key, std::vector<BYTE> value) {
     }
 }
 
-std::vector<Node *> Collection::getNodes(std::vector<int> indexes) {
+std::vector<Node *> Collection::getNodes(std::vector<int> &indexes) {
     Node *rootNode = tx->getNode(root);
     std::vector<Node *>nodes {rootNode};
     Node *currNode{rootNode};
@@ -80,7 +88,7 @@ std::vector<Node *> Collection::getNodes(std::vector<int> indexes) {
     return nodes;
 }
 
-void Collection::remove(std::vector<BYTE> key) {
+void Collection::remove(std::vector<BYTE> &key) {
     if (!tx->write) {
         throw writeInsideReadTxErr;
     }
@@ -140,7 +148,9 @@ void Collection::deserialize(Item *item) {
 }
 
 void Collection::put(std::string key, std::string value) {
-    return put(toVector(std::move(key)), toVector(std::move(value)));
+    std::vector<BYTE> key_bytes = toVector(std::move(key));
+    std::vector<BYTE> value_bytes = toVector(std::move(value));
+    return put(key_bytes, value_bytes);
 }
 
 Collection::Collection() {

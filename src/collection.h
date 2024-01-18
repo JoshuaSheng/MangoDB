@@ -17,21 +17,25 @@ public:
     uint64_t counter;
     pgnum root;
 
-    Collection(std::vector<BYTE> name, pgnum root, Tx *tx);
+    Collection(std::vector<BYTE> &name, pgnum root, Tx *tx);
     Collection();
-    std::vector<Node *>getNodes(std::vector<int> indexes);
+    std::vector<Node *>getNodes(std::vector<int> &indexes);
 
-    Item *find(std::vector<BYTE> key);
-    void put(std::vector<BYTE> key, std::vector<BYTE> value);
+    Item *find(std::vector<BYTE> &key);
+    void put(std::vector<BYTE> &key, std::vector<BYTE> &value);
 
     void put(std::string key, std::string value);
 
-    void remove(std::vector<BYTE> key);
+    void remove(std::vector<BYTE> &key);
 
     Item *serialize();
     void deserialize(Item *item);
 
     uint64_t getId();
+
+    Item *find(std::string key);
+
+    Item *find(std::vector<BYTE> &&key);
 };
 
 Collection *newEmptyCollection();

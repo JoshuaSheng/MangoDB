@@ -3,7 +3,6 @@
 //
 
 #include "Tx.h"
-
 Tx::Tx(DB *db, bool write): db(db), write(write){}
 
 void Tx::rollback() {
@@ -42,10 +41,19 @@ void Tx::commit() {
     db->rwlock.unlock();
 }
 
-Node *Tx::newNode(std::vector<Item *> items, std::vector<pgnum> childNodes) {
-    Node *node = newEmptyNode();
+Node *Tx::newNode(std::vector<Item *> &items, std::vector<pgnum> &childNodes) {
+    Node *node = newNode();
     node->items = items;
     node->childNodes = childNodes;
+    return node;
+}
+
+Node *Tx::newNode(std::vector<Item *> &&items, std::vector<pgnum> &&childNodes) {
+    return newNode(items, childNodes);
+}
+
+Node *Tx::newNode() {
+    Node *node = newEmptyNode();
     node->pageNum = db->dal->freeList->getNextPage();
     node->tx = this;
     allocatedPageNums.push_back(node->pageNum);
@@ -78,7 +86,7 @@ Collection *Tx::getRootCollection() {
     return rootCollection;
 }
 
-Collection *Tx::getCollection(std::vector<BYTE> name) {
+Collection *Tx::getCollection(std::vector<BYTE> &name) {
     Collection *root = getRootCollection();
     Item *item = root->find(name);
     if (item == nullptr) {
@@ -100,10 +108,11 @@ Collection *Tx::addToRootCollection(Collection *newCollection) {
 }
 
 Collection *Tx::createCollection(std::string name) {
-    return createCollection(toVector(name));
+    std::vector<BYTE> name_bytes = toVector(std::move(name));
+    return createCollection(name_bytes);
 }
 
-Collection *Tx::createCollection(std::vector<BYTE> name) {
+Collection *Tx::createCollection(std::vector<BYTE> &name) {
     if (!write) {
         throw writeInsideReadTxErr;
     }
@@ -115,7 +124,7 @@ Collection *Tx::createCollection(std::vector<BYTE> name) {
     return addToRootCollection(newCollection);
 }
 
-void Tx::deleteCollection(std::vector<BYTE> name) {
+void Tx::deleteCollection(std::vector<BYTE> &name) {
     if (!write) {
         throw writeInsideReadTxErr;
     }

@@ -18,8 +18,8 @@ struct Meta {
     pgnum root;
     pgnum freelistPage;
 
-    void serialize(std::vector<BYTE> *buffer);
-    void unserialize(std::vector<BYTE> *buffer);
+    void serialize(std::vector<BYTE> &buffer);
+    void unserialize(std::vector<BYTE> &buffer);
 };
 
 Meta *newEmptyMeta();
